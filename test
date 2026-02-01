@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Marriott Bell Desk System</title>
+    <style>
+        :root { --m-black: #000000; --m-gold: #b4975a; --m-gray: #f2f2f7; }
+        body { font-family: "Helvetica Neue", Arial, sans-serif; background: var(--m-gray); margin: 0; padding: 20px; text-align: center; }
+        
+        .card { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
+        .btn-group { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+        
+        .btn { padding: 20px; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s; color: white; }
+        .btn-pip { background: #333; } /* ホテル発のみ最前面 */
+        .btn-full { background: var(--m-gold); } /* 全画面表示 */
+        .btn:active { transform: scale(0.98); }
+
+        /* 全画面モード */
+        #fullScreenOverlay {
+            display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+            background: var(--m-black); color: white; z-index: 10000;
+            flex-direction: column; align-items: center; justify-content: center;
+        }
+        .fs-logo { width: 250px; filter: brightness(0) invert(1); margin-bottom: 5vh; }
+        .fs-label { color: var(--m-gold); letter-spacing: 10px; font-size: 1.5rem; margin-bottom: 2vh; }
+        .fs-time { font-size: 35vw; font-weight: bold; font-family: "Arial Black"; line-height: 1; }
+        
+        /* 時刻表リスト表示 (タップで出現) */
+        #timetableList {
+            display: none; position: absolute; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.95); padding: 40px; box-sizing: border-box;
+            overflow-y: auto; text-align: center;
+        }
+        .list-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 20px; }
+        .time-tag { background: #333; color: var(--m-gold); padding: 10px; border-radius: 8px; font-size: 1.5rem; font-weight: bold; }
+        .close-hint { margin-top: 30px; color: #666; font-size: 1rem; }
+
+        canvas, video { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Marriott_International_logo.svg/1024px-Marriott_International_logo.svg.png" style="width:150px; margin-bottom:20px;">
+    <div id="dateInfo" style="font-weight:bold; color:#666;"></div>
+    
+    <div class="btn-group">
+        <button class="btn btn-pip" onclick="togglePiP()">🖥️ 作業用：最前面に表示<br><small>(ホテル発のみ)</small></button>
+        <button class="btn btn-full" onclick="openFull()">📺 ゲスト用：全画面表示</button>
+    </div>
+</div>
+
+<div id="fullScreenOverlay" onclick="showTimetable()">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Marriott_International_logo.svg/1024px-Marriott_International_logo.svg.png" class="fs-logo">
+    <div class="fs-label">HOTEL NEXT BUS</div>
+    <div id="fsNext" class="fs-time">--:--</div>
+    <div style="margin-top:5vh; color:#444;">Tap to view Timetable / Double click to close</div>
+    
+    <div id="timetableList" onclick="hideTimetable(event)">
+        <h2 style="color:var(--m-gold);">TODAY'S TIMETABLE</h2>
+        <div id="gridBody" class="list-grid"></div>
+        <div class="close-hint">Tap anywhere to back</div>
+    </div>
+</div>
+
+<canvas id="pipCanvas" width="300" height="150"></canvas>
+<video id="pipVideo" autoplay muted playsinline></video>
+
+<script>
+    const schedule = {
+        weekday: ["07:57", "08:11", "08:25", "08:40", "08:55", "09:11", "09:28", "09:46", "10:20", "10:54", "11:28", "12:02", "12:36", "13:10", "13:44", "14:18", "14:52", "15:26", "16:00", "16:34", "17:06", "17:37", "18:08", "18:39", "19:10"],
+        weekend: ["09:01", "09:33", "10:06", "10:40", "11:14", "11:48", "12:22", "12:56", "13:30", "14:04", "14:38", "15:12", "15:46", "16:20", "16:54", "17:28", "18:02", "18:36", "19:10"]
+    };
+
+    let currentNextH = "--:--";
+
+    function update() {
+        const now = new Date();
+        const isWeekend = (now.getDay() === 0 || now.getDay() === 6);
+        const todaySchedule = isWeekend ? schedule.weekend : schedule.weekday;
+        const nowStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+        
+        currentNextH = todaySchedule.find(t => t > nowStr) || "END";
+        
+        document.getElementById('dateInfo').innerText = isWeekend ? "本日：土日祝ダイヤ" : "本日：平日ダイヤ";
+        document.getElementById('fsNext').innerText = currentNextH;
+
+        // 時刻表リストの生成
+        const grid = document.getElementById('gridBody');
+        grid.innerHTML = todaySchedule.map(t => `<div class="time-tag">${t}</div>`).join('');
+
+        drawPiP();
+    }
+
+    // PiP描画（ホテル発のみ）
+    const canvas = document.getElementById('pipCanvas');
+    const ctx = canvas.getContext('2d');
+    function drawPiP() {
+        ctx.fillStyle = "#1c1c1e"; ctx.fillRect(0,0,300,150);
+        ctx.fillStyle = "#b4975a"; ctx.font = "bold 16px sans-serif"; ctx.fillText("HOTEL SHUTTLE", 20, 40);
+        ctx.fillStyle = "white"; ctx.font = "bold 60px monospace"; ctx.fillText(currentNextH, 20, 110);
+    }
+
+    async function togglePiP() {
+        const v = document.getElementById('pipVideo');
+        if (document.pictureInPictureElement) await document.exitPictureInPicture();
+        else { v.srcObject = canvas.captureStream(); await v.play(); await v.requestPictureInPicture(); }
+    }
+
+    // 全画面表示
+    function openFull() {
+        const el = document.getElementById('fullScreenOverlay');
+        el.style.display = 'flex';
+        if (el.requestFullscreen) el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    }
+
+    // 全画面をダブルクリックで閉じる
+    document.getElementById('fullScreenOverlay').ondblclick = () => {
+        document.getElementById('fullScreenOverlay').style.display = 'none';
+        if (document.exitFullscreen) document.exitFullscreen();
+    };
+
+    function showTimetable() { document.getElementById('timetableList').style.display = 'block'; }
+    function hideTimetable(e) { e.stopPropagation(); document.getElementById('timetableList').style.display = 'none'; }
+
+    setInterval(update, 1000);
+    update();
+</script>
+</body>
+</html>
