@@ -36,7 +36,7 @@
         .time-tag { background: #333; color: var(--m-gold); padding: 10px; border-radius: 8px; font-size: 1.5rem; font-weight: bold; }
         .close-hint { margin-top: 30px; color: #666; font-size: 1rem; }
         .passed { opacity: 0.3; font-weight: normal; } /* 出発済みの便 */
-
+     
         canvas, video { display: none; }
     </style>
 </head>
@@ -89,7 +89,10 @@
 
         // 時刻表リストの生成
         const grid = document.getElementById('gridBody');
-        grid.innerHTML = todaySchedule.map(t => `<div class="time-tag">${t}</div>`).join('');
+        grid.innerHTML = todaySchedule.map(t => {
+    const isPassed = t <= nowStr;
+    return `<div class="time-tag ${isPassed ? 'passed' : ''}">${t}</div>`;
+}).join('');
 
         drawPiP();
     }
