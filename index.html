@@ -3,65 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Marriott Bell Desk System</title>
+    <title>Marriott Shuttle Bus System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --m-black: #000000; --m-gold: #b4975a; --m-gray: #f2f2f7; }
-        body { font-family: "Helvetica Neue", Arial, sans-serif; background: var(--m-gray); margin: 0; padding: 20px; text-align: center; }
+        :root { 
+            --primary: #007AFF; 
+            --bg: #F2F2F7; 
+            --m-black: #000000;
+            --m-gold: #b4975a;
+        }
         
-        .card { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
-        .btn-group { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; }
+        /* フォント指定：Effraを優先（数字用）、日本語はNoto Sans JP */
+        body { 
+            font-family: "Effra", "Noto Sans JP", -apple-system, sans-serif; 
+            background: var(--bg); 
+            margin: 0; padding: 20px; color: #333; padding-bottom: 120px; 
+        }
+
+        .container { max-width: 500px; margin: auto; }
+        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
-        .btn { padding: 20px; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s; color: white; }
-        .btn-pip { background: #333; } /* ホテル発のみ最前面 */
-        .btn-full { background: var(--m-gold); } /* 全画面表示 */
-        .btn:active { transform: scale(0.98); }
+        /* ボタンデザイン */
+        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .btn { border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; font-family: inherit; }
+        .btn-pip { background: #333; }
+        .btn-full { background: var(--m-gold); }
+        .btn:active { transform: scale(0.95); }
+
+        .status-tag { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; margin-bottom: 15px; }
+        .weekday { background: #E3F2FD; color: #1976D2; }
+        .weekend { background: #FFEBEE; color: #D32F2F; }
+        
+        .result-item { margin: 20px 0; border-left: 4px solid var(--primary); padding-left: 15px; }
+        .location { font-size: 0.9rem; color: #777; font-weight: bold; }
+        .next-time { font-size: 1.8rem; font-weight: 800; color: var(--primary); display: block; margin-top: 5px; }
+        .error-msg { font-size: 0.95rem; color: #D32F2F; font-weight: bold; }
+
+        textarea { width: 100%; height: 70px; border: 1px solid #DDD; border-radius: 8px; padding: 10px; box-sizing: border-box; font-size: 0.9rem; font-family: monospace; }
+        label { display: block; margin: 15px 0 5px; font-weight: bold; font-size: 0.85rem; color: #555; }
 
         /* 全画面モード */
         #fullScreenOverlay {
-            display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--m-black); color: white; z-index: 10000;
             flex-direction: column; align-items: center; justify-content: center;
         }
-        .fs-logo { width: 250px; filter: brightness(0) invert(1); margin-bottom: 5vh; }
-        .fs-label { color: var(--m-gold); letter-spacing: 10px; font-size: 1.5rem; margin-bottom: 2vh; }
-        .fs-time { font-size: 35vw; font-weight: bold; font-family: "Arial Black"; line-height: 1; }
+        .fs-logo { width: 12vw; filter: brightness(0) invert(1); margin-bottom: 40px; }
+        .fs-label { font-size: 4vw; letter-spacing: 5px; color: var(--m-gold); margin-bottom: 10px; }
+        .fs-time { font-size: 30vw; font-weight: bold; line-height: 1; font-family: "Effra", sans-serif; }
+
+      /* 全画面用時刻表リスト */
+        #fsTimetableList { display: none; position: absolute;  top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); padding: 40px;
+    box-sizing: border-box; overflow-y: auto; text-align: center;}
+
+/* 時刻表グリッド */
+.list-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;  margin-top: 30px; max-width: 900px; margin-left: auto; margin-right: auto;}
+
+/* 各便カード */
+.time-item { background: #333; color: var(--m-gold); padding: 12px 0; border-radius: 10px; font-size: 1.6rem; font-weight: bold;}
+
+/* 出発済み */
+.passed { opacity: 0.3; color: #999; background: #222; font-weight: normal;}
         
-        /* 時刻表リスト表示 (タップで出現) */
-        #timetableList {
-            display: none; position: absolute; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.95); padding: 40px; box-sizing: border-box;
-            overflow-y: auto; text-align: center;
-        }
-        .list-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 20px; }
-        .time-tag { background: #333; color: var(--m-gold); padding: 10px; border-radius: 8px; font-size: 1.5rem; font-weight: bold; }
-        .close-hint { margin-top: 30px; color: #666; font-size: 1rem; }
-        .passed { opacity: 0.3; font-weight: normal; } /* 出発済みの便 */
-     
         canvas, video { display: none; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Marriott_International_logo.svg/1024px-Marriott_International_logo.svg.png" style="width:150px; margin-bottom:20px;">
-    <div id="dateInfo" style="font-weight:bold; color:#666;"></div>
-    
+<div class="container">
     <div class="btn-group">
-        <button class="btn btn-pip" onclick="togglePiP()">🖥️ 作業用：最前面に表示<br><small>(ホテル発のみ)</small></button>
-        <button class="btn btn-full" onclick="openFull()">📺 ゲスト用：全画面表示</button>
+        <button class="btn btn-pip" onclick="togglePiP()">🖥️ 最前面表示</button>
+        <button class="btn btn-full" onclick="openFull()">📺 全画面表示</button>
     </div>
+
+    <div class="card">
+        <div id="dayTypeTag" class="status-tag">取得中...</div>
+        <div class="result-item">
+            <span class="location">品川駅 (Shinagawa)</span>
+            <span id="shinagawaNext" class="next-time">--:--</span>
+        </div>
+        <div class="result-item">
+            <span class="location">ホテル (Hotel)</span>
+            <span id="hotelNext" class="next-time">--:--</span>
+        </div>
+    </div>
+
+    <div class="holiday-toggle">
+        <span style="font-weight: bold;">今日は祝日ですか？</span>
+        <input type="checkbox" id="holidayManual" onchange="updateDisplay()" style="width: 20px; height: 20px;">
+    </div>
+
+    <div class="card">
+        <h2>時刻表設定</h2>
+        <label>平日 - 品川駅：</label>
+        <textarea id="s_weekday">07:54, 08:08, 08:22, 08:36, 08:51, 09:07, 09:23, 09:39, 09:56, 10:14, 10:48, 11:22, 11:56, 12:30, 13:04, 13:48, 14:12, 14:46, 15:20, 15:54, 16:27, 17:00, 17:32, 18:03, 18:34, 19:06</textarea>
+        <label>平日 - ホテル：</label>
+        <textarea id="h_weekday">07:57, 08:11, 08:25, 08:40, 08:55, 09:11, 09:28, 09:46, 10:20, 10:54, 11:28, 12:02, 12:36, 13:10, 13:44, 14:18, 14:52, 15:26, 16:00, 16:34, 17:06, 17:37, 18:08, 18:39, 19:10</textarea>
+
+        <label style="margin-top:20px;">土日祝 - 品川駅：</label>
+        <textarea id="s_weekend">09:27, 10:00, 10:34, 11:08, 11:42, 12:16, 12:50, 13:24, 13:58, 14:32, 15:06, 15:40, 16:14, 16:48, 17:22, 17:56, 18:31, 19:06</textarea>
+        <label>土日祝 - ホテル：</label>
+        <textarea id="h_weekend">09:01, 09:33, 10:06, 10:40, 11:14, 11:48, 12:22, 12:56, 13:30, 14:04, 14:38, 15:12, 15:46, 16:20, 16:54, 17:28, 18:02, 18:36, 19:10</textarea>
+    </div>
+
+    <div class="footer">現在時刻：<span id="currentTime"></span></div>
 </div>
 
 <div id="fullScreenOverlay" onclick="showTimetable()">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Marriott_International_logo.svg/1024px-Marriott_International_logo.svg.png" class="fs-logo">
-    <div class="fs-label">HOTEL NEXT BUS</div>
-    <div id="fsNext" class="fs-time">--:--</div>
-    <div style="margin-top:5vh; color:#444;">Tap to view Timetable / Double click to close</div>
-    
-    <div id="timetableList" onclick="hideTimetable(event)">
-        <h2 style="color:var(--m-gold);">TODAY'S TIMETABLE</h2>
-        <div id="gridBody" class="list-grid"></div>
-        <div class="close-hint">Tap anywhere to back</div>
+    <img src="https://shop.marriott.com/on/demandware.static/Sites-MBB-US-Site/-/default/dwd2983f65/images/brand/marriott.svg" class="fs-logo">
+    <div class="fs-label">NEXT SHUTTLE BUS</div>
+    <div id="fsNextH" class="fs-time">--:--</div>
+    <div style="margin-top:20px; color:#555; font-size:0.8rem;">Tap to view list / Double tap to exit</div>
+
+    <div id="fsTimetableList" onclick="hideTimetable(event)">
+        <h2 style="text-align:center; color:var(--m-gold);">TODAY'S SCHEDULE</h2>
+        <div id="listGrid" class="list-grid"></div>
+        <p style="text-align:center; color:#555; margin-top:30px;">Tap to return</p>
     </div>
 </div>
 
@@ -69,32 +126,55 @@
 <video id="pipVideo" autoplay muted playsinline></video>
 
 <script>
-    const schedule = {
-        weekday: ["07:57", "08:11", "08:25", "08:40", "08:55", "09:11", "09:28", "09:46", "10:20", "10:54", "11:28", "12:02", "12:36", "13:10", "13:44", "14:18", "14:52", "15:26", "16:00", "16:34", "17:06", "17:37", "18:08", "18:39", "19:10"],
-        weekend: ["09:01", "09:33", "10:06", "10:40", "11:14", "11:48", "12:22", "12:56", "13:30", "14:04", "14:38", "15:12", "15:46", "16:20", "16:54", "17:28", "18:02", "18:36", "19:10"]
-    };
+    let nextH = "--:--";
 
-    let currentNextH = "--:--";
-
-    function update() {
+    function isWeekend() {
         const now = new Date();
-        const isWeekend = (now.getDay() === 0 || now.getDay() === 6);
-        const todaySchedule = isWeekend ? schedule.weekend : schedule.weekday;
+        const day = now.getDay();
+        return (day === 0 || day === 6 || document.getElementById('holidayManual').checked);
+    }
+
+    function getNextBus(inputStr) {
+        const schedule = inputStr.split(/[\s,，]+/).filter(t => t.match(/^([01]\d|2[0-3]):([0-5]\d)$/)).sort();
+        const now = new Date();
         const nowStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-        
-        currentNextH = todaySchedule.find(t => t > nowStr) || "END";
-        
-        document.getElementById('dateInfo').innerText = isWeekend ? "本日：土日祝ダイヤ" : "本日：平日ダイヤ";
-        document.getElementById('fsNext').innerText = currentNextH;
+        return schedule.find(time => time > nowStr) || "終了";
+    }
 
-        // 時刻表リストの生成
-        const grid = document.getElementById('gridBody');
-        grid.innerHTML = todaySchedule.map(t => {
-    const isPassed = t <= nowStr;
-    return `<div class="time-tag ${isPassed ? 'passed' : ''}">${t}</div>`;
-}).join('');
+    function updateDisplay() {
+        const weekendMode = isWeekend();
+        const tag = document.getElementById('dayTypeTag');
+        tag.innerText = weekendMode ? "本日：土日祝ダイヤ" : "本日：平日ダイヤ";
+        tag.className = "status-tag " + (weekendMode ? "weekend" : "weekday");
 
+        const sInputId = weekendMode ? 's_weekend' : 's_weekday';
+        const hInputId = weekendMode ? 'h_weekend' : 'h_weekday';
+
+        const nextS = getNextBus(document.getElementById(sInputId).value);
+        nextH = getNextBus(document.getElementById(hInputId).value);
+
+        // UI反映
+        document.getElementById('shinagawaNext').innerText = nextS === "終了" ? "終便終了" : nextS;
+        document.getElementById('hotelNext').innerText = nextH === "終了" ? "終便終了" : nextH;
+        document.getElementById('fsNextH').innerText = nextH;
+
+        // 時刻表リストの更新
+        updateTimetableList(document.getElementById(hInputId).value);
+
+        document.getElementById('currentTime').innerText = new Date().toLocaleTimeString('ja-JP');
         drawPiP();
+    }
+
+    function updateTimetableList(rawSchedule) {
+        const now = new Date();
+        const nowStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+        const times = rawSchedule.split(/[\s,，]+/).filter(t => t.match(/^([01]\d|2[0-3]):([0-5]\d)$/)).sort();
+        
+        const grid = document.getElementById('listGrid');
+        grid.innerHTML = times.map(t => {
+            const isPassed = t <= nowStr;
+            return `<div class="time-item ${isPassed ? 'passed' : ''}">${t}</div>`;
+        }).join('');
     }
 
     // PiP描画（ホテル発のみ）
@@ -102,35 +182,36 @@
     const ctx = canvas.getContext('2d');
     function drawPiP() {
         ctx.fillStyle = "#1c1c1e"; ctx.fillRect(0,0,300,150);
-        ctx.fillStyle = "#b4975a"; ctx.font = "bold 16px sans-serif"; ctx.fillText("HOTEL SHUTTLE", 20, 40);
-        ctx.fillStyle = "white"; ctx.font = "bold 60px monospace"; ctx.fillText(currentNextH, 20, 110);
+        ctx.fillStyle = "#b4975a"; ctx.font = "bold 16px sans-serif"; ctx.fillText("HOTEL NEXT", 20, 40);
+        ctx.fillStyle = "white"; ctx.font = "bold 60px monospace"; ctx.fillText(nextH, 20, 110);
     }
 
     async function togglePiP() {
-        const v = document.getElementById('pipVideo');
+        const video = document.getElementById('pipVideo');
         if (document.pictureInPictureElement) await document.exitPictureInPicture();
-        else { v.srcObject = canvas.captureStream(); await v.play(); await v.requestPictureInPicture(); }
+        else {
+            video.srcObject = canvas.captureStream();
+            await video.play();
+            await video.requestPictureInPicture();
+        }
     }
 
-    // 全画面表示
-    function openFull() {
-        const el = document.getElementById('fullScreenOverlay');
-        el.style.display = 'flex';
-        if (el.requestFullscreen) el.requestFullscreen();
-        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    function openFull() { 
+        document.getElementById('fullScreenOverlay').style.display = 'flex';
+        if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
     }
-
-    // 全画面をダブルクリックで閉じる
-    document.getElementById('fullScreenOverlay').ondblclick = () => {
+    
+    // 全画面解除用（ダブルタップ）
+    document.getElementById('fullScreenOverlay').addEventListener('dblclick', () => {
         document.getElementById('fullScreenOverlay').style.display = 'none';
         if (document.exitFullscreen) document.exitFullscreen();
-    };
+    });
 
-    function showTimetable() { document.getElementById('timetableList').style.display = 'block'; }
-    function hideTimetable(e) { e.stopPropagation(); document.getElementById('timetableList').style.display = 'none'; }
+    function showTimetable() { document.getElementById('fsTimetableList').style.display = 'block'; }
+    function hideTimetable(e) { e.stopPropagation(); document.getElementById('fsTimetableList').style.display = 'none'; }
 
-    setInterval(update, 1000);
-    update();
+    setInterval(updateDisplay, 1000);
+    updateDisplay();
 </script>
 </body>
 </html>
