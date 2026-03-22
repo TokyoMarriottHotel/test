@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Marriott Shuttle Bus System - Bell Desk</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+    <title>Marriott Shuttle Bus System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root { 
             --primary: #007AFF; 
@@ -13,8 +13,9 @@
             --m-gold: #b4975a;
         }
         
+        /* フォント指定：Effraを優先（数字用）、日本語はNoto Sans JP */
         body { 
-            font-family: "Montserrat", "Noto Sans JP", -apple-system, sans-serif; 
+            font-family: "Effra", "Noto Sans JP", -apple-system, sans-serif; 
             background: var(--bg); 
             margin: 0; padding: 20px; color: #333; padding-bottom: 120px; 
         }
@@ -22,6 +23,7 @@
         .container { max-width: 500px; margin: auto; }
         .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
         
+        /* ボタンデザイン */
         .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .btn { border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; font-family: inherit; }
         .btn-pip { background: #333; }
@@ -35,42 +37,45 @@
         .result-item { margin: 20px 0; border-left: 4px solid var(--primary); padding-left: 15px; }
         .location { font-size: 0.9rem; color: #777; font-weight: bold; }
         .next-time { font-size: 1.8rem; font-weight: 800; color: var(--primary); display: block; margin-top: 5px; }
+        .error-msg { font-size: 0.95rem; color: #D32F2F; font-weight: bold; }
 
         textarea { width: 100%; height: 70px; border: 1px solid #DDD; border-radius: 8px; padding: 10px; box-sizing: border-box; font-size: 0.9rem; font-family: monospace; }
         label { display: block; margin: 15px 0 5px; font-weight: bold; font-size: 0.85rem; color: #555; }
 
-        /* --- 全画面モード (Signage Mode) --- */
+        /* 全画面モード */
         #fullScreenOverlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--m-black); color: white; z-index: 10000;
             flex-direction: column; align-items: center; justify-content: center;
         }
-
         /* 修正：ロゴとタイトルを同じ行に配置 */
-        .fs-header {
-            display: flex; align-items: center; justify-content: center;
-            gap: 20px; margin-bottom: 20px; width: 90%;
-        }
-        .fs-logo { width: 120px; filter: brightness(0) invert(1); }
-        .fs-label { font-size: 5vw; letter-spacing: 2px; color: var(--m-gold); font-weight: 800; }
+.fs-header {
+    display: flex; align-items: center; justify-content: center;
+    gap: 20px; margin-bottom: 20px; width: 90%;
+}
+        .fs-logo { width: 12vw; filter: brightness(0) invert(1); margin-bottom: 0; }
+        .fs-label { font-size: 10vw; letter-spacing: 2px; color: var(--m-gold);font-weight: 800; }/* 文字を大きく */
+        .fs-time { font-size: 30vw; font-weight: bold; line-height: 1; font-family: "Effra", sans-serif; }
 
-        /* 修正：現在の時刻を右上に小さく表示 */
-        .fs-current-time {
-            position: absolute; top: 20px; right: 30px;
-            font-size: 1.5rem; color: #444; font-weight: bold;
-        }
+        /* 修正：現在の時刻を右上に配置 */
+.fs-current-time {
+    position: absolute; top: 20px; right: 30px;
+    font-size: 1.5rem; color: #f0e1e1; font-weight: bold;
+}
 
-        .fs-time { font-size: 32vw; font-weight: 800; line-height: 1; font-family: "Montserrat", sans-serif; }
+      /* 全画面用時刻表リスト */
+        #fsTimetableList { display: none; position: absolute;  top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); padding: 40px;
+    box-sizing: border-box; overflow-y: auto; text-align: center;}
 
-        /* 時刻表リスト */
-        #fsTimetableList { 
-            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.95); padding: 40px; box-sizing: border-box; overflow-y: auto; 
-        }
-        .list-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 30px; max-width: 900px; margin: auto; }
-        .time-item { background: #1a1a1a; border: 1px solid var(--m-gold); color: var(--m-gold); padding: 15px 0; border-radius: 10px; font-size: 1.6rem; font-weight: bold; text-align: center; }
-        .passed { opacity: 0.2; color: #666; border-color: #333; font-weight: normal; }
+/* 時刻表グリッド */
+.list-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;  margin-top: 30px; max-width: 900px; margin-left: auto; margin-right: auto;}
 
+/* 各便カード */
+.time-item { background: #333; color: var(--m-gold); padding: 12px 0; border-radius: 10px; font-size: 1.6rem; font-weight: bold;}
+
+/* 出発済み */
+.passed { opacity: 0.3; color: #999; background: #222; font-weight: normal;}
+        
         canvas, video { display: none; }
     </style>
 </head>
@@ -101,16 +106,14 @@
 
     <div class="card">
         <h2>時刻表設定</h2>
- <label>📅 平日 - 品川駅：</label>
+        <label>平日 - 品川駅：</label>
         <textarea id="s_weekday">07:54, 08:08, 08:22, 08:36, 08:51, 09:07, 09:23, 09:39, 09:56, 10:14, 10:48, 11:22, 11:56, 12:30, 13:04, 13:48, 14:12, 14:46, 15:20, 15:54, 16:27, 17:00, 17:32, 18:03, 18:34, 19:06</textarea>
-
-        <label>📅 平日 - ホテル：</label>
+        <label>平日 - ホテル：</label>
         <textarea id="h_weekday">07:57, 08:11, 08:25, 08:40, 08:55, 09:11, 09:28, 09:46, 10:20, 10:54, 11:28, 12:02, 12:36, 13:10, 13:44, 14:18, 14:52, 15:26, 16:00, 16:34, 17:06, 17:37, 18:08, 18:39, 19:10</textarea>
 
-        <label style="margin-top:20px;">🎉 土日祝 - 品川駅：</label>
+        <label style="margin-top:20px;">土日祝 - 品川駅：</label>
         <textarea id="s_weekend">09:27, 10:00, 10:34, 11:08, 11:42, 12:16, 12:50, 13:24, 13:58, 14:32, 15:06, 15:40, 16:14, 16:48, 17:22, 17:56, 18:31, 19:06</textarea>
-
-        <label>🎉 土日祝 - ホテル：</label>
+        <label>土日祝 - ホテル：</label>
         <textarea id="h_weekend">09:01, 09:33, 10:06, 10:40, 11:14, 11:48, 12:22, 12:56, 13:30, 14:04, 14:38, 15:12, 15:46, 16:20, 16:54, 17:28, 18:02, 18:36, 19:10</textarea>
     </div>
 
@@ -121,15 +124,13 @@
     <div id="fsClock" class="fs-current-time">--:--:--</div>
     
     <div class="fs-header">
-        <img src="https://shop.marriott.com/on/demandware.static/Sites-MBB-US-Site/-/default/dwd2983f65/images/brand/marriott.svg" class="fs-logo">
-        <div class="fs-label">NEXT SHUTTLE BUS</div>
-    </div>
-
+    <img src="https://shop.marriott.com/on/demandware.static/Sites-MBB-US-Site/-/default/dwd2983f65/images/brand/marriott.svg" class="fs-logo">
+    <div class="fs-label">NEXT SHUTTLE BUS</div>
     <div id="fsNextH" class="fs-time">--:--</div>
-    <div style="margin-top:20px; color:#333; font-size:0.8rem; letter-spacing: 2px;">Tap to view list / Double tap to exit</div>
+    <div style="margin-top:20px; color:#555; font-size:0.8rem;">Tap to view list / Double tap to exit</div>
 
     <div id="fsTimetableList" onclick="hideTimetable(event)">
-        <h2 style="text-align:center; color:var(--m-gold); letter-spacing: 5px;">TODAY'S SCHEDULE</h2>
+        <h2 style="text-align:center; color:var(--m-gold);">TODAY'S SCHEDULE</h2>
         <div id="listGrid" class="list-grid"></div>
         <p style="text-align:center; color:#555; margin-top:30px;">Tap to return</p>
     </div>
@@ -143,12 +144,14 @@
 
     function isWeekend() {
         const now = new Date();
-        return (now.getDay() === 0 || now.getDay() === 6 || document.getElementById('holidayManual').checked);
+        const day = now.getDay();
+        return (day === 0 || day === 6 || document.getElementById('holidayManual').checked);
     }
 
     function getNextBus(inputStr) {
         const schedule = inputStr.split(/[\s,，]+/).filter(t => t.match(/^([01]\d|2[0-3]):([0-5]\d)$/)).sort();
-        const nowStr = new Date().getHours().toString().padStart(2, '0') + ":" + new Date().getMinutes().toString().padStart(2, '0');
+        const now = new Date();
+        const nowStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
         return schedule.find(time => time > nowStr) || "終了";
     }
 
@@ -158,32 +161,43 @@
         tag.innerText = weekendMode ? "本日：土日祝ダイヤ" : "本日：平日ダイヤ";
         tag.className = "status-tag " + (weekendMode ? "weekend" : "weekday");
 
-        const sId = weekendMode ? 's_weekend' : 's_weekday';
-        const hId = weekendMode ? 'h_weekend' : 'h_weekday';
+        const sInputId = weekendMode ? 's_weekend' : 's_weekday';
+        const hInputId = weekendMode ? 'h_weekend' : 'h_weekday';
 
-        const nextS = getNextBus(document.getElementById(sId).value);
-        nextH = getNextBus(document.getElementById(hId).value);
+        const nextS = getNextBus(document.getElementById(sInputId).value);
+        nextH = getNextBus(document.getElementById(hInputId).value);
 
+        // UI反映
         document.getElementById('shinagawaNext').innerText = nextS === "終了" ? "終便終了" : nextS;
         document.getElementById('hotelNext').innerText = nextH === "終了" ? "終便終了" : nextH;
         document.getElementById('fsNextH').innerText = nextH;
 
-        updateTimetableList(document.getElementById(hId).value);
-        
-        const now = new Date();
-        document.getElementById('currentTime').innerText = now.toLocaleTimeString('ja-JP');
-        document.getElementById('fsClock').innerText = now.toLocaleTimeString('ja-JP'); // 全画面右上の時計
-        
-        drawPiP();
+        // 時刻表リストの更新
+        updateTimetableList(document.getElementById(hInputId).value);
+
+       const now = new Date();
+document.getElementById('currentTime').innerText = now.toLocaleTimeString('ja-JP');
+
+// 全画面表示用の時計も更新
+const fsClock = document.getElementById('fsClock');
+if (fsClock) fsClock.innerText = now.toLocaleTimeString('ja-JP');
+
+drawPiP();
     }
 
     function updateTimetableList(rawSchedule) {
-        const nowStr = new Date().getHours().toString().padStart(2, '0') + ":" + new Date().getMinutes().toString().padStart(2, '0');
+        const now = new Date();
+        const nowStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
         const times = rawSchedule.split(/[\s,，]+/).filter(t => t.match(/^([01]\d|2[0-3]):([0-5]\d)$/)).sort();
+        
         const grid = document.getElementById('listGrid');
-        grid.innerHTML = times.map(t => `<div class="time-item ${t <= nowStr ? 'passed' : ''}">${t}</div>`).join('');
+        grid.innerHTML = times.map(t => {
+            const isPassed = t <= nowStr;
+            return `<div class="time-item ${isPassed ? 'passed' : ''}">${t}</div>`;
+        }).join('');
     }
 
+    // PiP描画（ホテル発のみ）
     const canvas = document.getElementById('pipCanvas');
     const ctx = canvas.getContext('2d');
     function drawPiP() {
@@ -195,7 +209,11 @@
     async function togglePiP() {
         const video = document.getElementById('pipVideo');
         if (document.pictureInPictureElement) await document.exitPictureInPicture();
-        else { video.srcObject = canvas.captureStream(); await video.play(); await video.requestPictureInPicture(); }
+        else {
+            video.srcObject = canvas.captureStream();
+            await video.play();
+            await video.requestPictureInPicture();
+        }
     }
 
     function openFull() { 
@@ -203,6 +221,7 @@
         if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
     }
     
+    // 全画面解除用（ダブルタップ）
     document.getElementById('fullScreenOverlay').addEventListener('dblclick', () => {
         document.getElementById('fullScreenOverlay').style.display = 'none';
         if (document.exitFullscreen) document.exitFullscreen();
