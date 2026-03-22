@@ -46,7 +46,6 @@
             flex-direction: column; align-items: center; justify-content: center;
         }
 
-        /* 修正：ロゴとタイトルを同じ行に配置 */
         .fs-header {
             display: flex; align-items: center; justify-content: center;
             gap: 20px; margin-bottom: 20px; width: 90%;
@@ -54,7 +53,6 @@
         .fs-logo { width: 120px; filter: brightness(0) invert(1); }
         .fs-label { font-size: 5vw; letter-spacing: 2px; color: var(--m-gold); font-weight: 800; }
 
-        /* 修正：現在の時刻を右上に小さく表示 */
         .fs-current-time {
             position: absolute; top: 20px; right: 30px;
             font-size: 1.5rem; color: #444; font-weight: bold;
@@ -101,11 +99,17 @@
 
     <div class="card">
         <h2>時刻表設定</h2>
-        <label>平日時刻表 (品川/ホテル):</label>
+        
+        <label>📅 平日 - 品川駅：</label>
         <textarea id="s_weekday">07:54, 08:08, 08:22, 08:36, 08:51, 09:07, 09:23, 09:39, 09:56, 10:14, 10:48, 11:22, 11:56, 12:30, 13:04, 13:48, 14:12, 14:46, 15:20, 15:54, 16:27, 17:00, 17:32, 18:03, 18:34, 19:06</textarea>
+
+        <label>📅 平日 - ホテル：</label>
         <textarea id="h_weekday">07:57, 08:11, 08:25, 08:40, 08:55, 09:11, 09:28, 09:46, 10:20, 10:54, 11:28, 12:02, 12:36, 13:10, 13:44, 14:18, 14:52, 15:26, 16:00, 16:34, 17:06, 17:37, 18:08, 18:39, 19:10</textarea>
-        <label>土日祝時刻表 (品川/ホテル):</label>
+
+        <label style="margin-top:20px;">🎉 土日祝 - 品川駅：</label>
         <textarea id="s_weekend">09:27, 10:00, 10:34, 11:08, 11:42, 12:16, 12:50, 13:24, 13:58, 14:32, 15:06, 15:40, 16:14, 16:48, 17:22, 17:56, 18:31, 19:06</textarea>
+
+        <label>🎉 土日祝 - ホテル：</label>
         <textarea id="h_weekend">09:01, 09:33, 10:06, 10:40, 11:14, 11:48, 12:22, 12:56, 13:30, 14:04, 14:38, 15:12, 15:46, 16:20, 16:54, 17:28, 18:02, 18:36, 19:10</textarea>
     </div>
 
@@ -167,7 +171,7 @@
         
         const now = new Date();
         document.getElementById('currentTime').innerText = now.toLocaleTimeString('ja-JP');
-        document.getElementById('fsClock').innerText = now.toLocaleTimeString('ja-JP'); // 全画面右上の時計
+        document.getElementById('fsClock').innerText = now.toLocaleTimeString('ja-JP');
         
         drawPiP();
     }
@@ -199,15 +203,4 @@
     }
     
     document.getElementById('fullScreenOverlay').addEventListener('dblclick', () => {
-        document.getElementById('fullScreenOverlay').style.display = 'none';
-        if (document.exitFullscreen) document.exitFullscreen();
-    });
-
-    function showTimetable() { document.getElementById('fsTimetableList').style.display = 'block'; }
-    function hideTimetable(e) { e.stopPropagation(); document.getElementById('fsTimetableList').style.display = 'none'; }
-
-    setInterval(updateDisplay, 1000);
-    updateDisplay();
-</script>
-</body>
-</html>
+        document.getElementById('full
