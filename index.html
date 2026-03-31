@@ -159,7 +159,7 @@
             const mUnit = diffMin === 1 ? "min" : "mins";
             text = isHtml ? `<span class="num">${diffMin}</span> ${mUnit}` : `${diffMin}${mUnit}`;
         }
-        return isHtml ? `Departs in ${text}` : text;
+        return isHtml ? `in ${text}` : text;
     }
 
     function findNext(times) {
