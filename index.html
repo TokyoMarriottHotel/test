@@ -67,12 +67,40 @@
             z-index: 3100;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            /* 中央寄せを解除し、上から順に配置（スクロールのため） */
+            justify-content: flex-start; 
             padding: 5vh 5vw;
             box-sizing: border-box;
+            overflow: hidden; /* 親要素自体ははみ出さない */
         }
-        .overlay-title { font-size: 4vw; font-weight: bold; color: var(--m-gold); margin-bottom: 4vh; letter-spacing: 0.05em; }
-        .tile-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); justify-content: center; align-content: center; gap: 25px; width: 100%; max-width: 1200px; }
+
+        .overlay-title { 
+            font-size: 4vw; 
+            font-weight: bold; 
+            color: var(--m-gold); 
+            margin-bottom: 4vh; 
+            letter-spacing: 0.05em; 
+            flex-shrink: 0; /* タイトルがスクロールで潰れないように固定 */
+        }
+
+        .tile-container { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+            justify-content: center; 
+            gap: 25px; 
+            width: 100%; 
+            max-width: 1200px; 
+            /* ここが重要：リスト部分だけをスクロール可能に */
+            overflow-y: auto; 
+            flex-grow: 1; 
+            padding-bottom: 5vh;
+            
+            /* スクロールバーを隠す設定 */
+            -ms-overflow-style: none; scrollbar-width: none;
+        }
+        .tile-container::-webkit-scrollbar { display: none; }
+
+        /* タイル自体のスタイルは変更なし */
         .tile { padding: 25px 10px; border: 2px solid var(--m-gold); text-align: center; font-size: 2.2rem; font-weight: bold; border-radius: 100px; color: var(--m-white); }
         .tile.passed { opacity: 0.15; border-color: #444; }
 
